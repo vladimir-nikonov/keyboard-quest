@@ -19,13 +19,22 @@ export function ProfileSelect() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-4xl font-bold text-white"
-      >
-        Who's playing?
-      </motion.h2>
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => setScreen('start')}
+          className="px-4 py-2 rounded-full bg-bg-card text-white/60 hover:text-white text-sm"
+        >
+          ← Back
+        </button>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-3xl sm:text-4xl font-bold text-white"
+        >
+          Who's playing?
+        </motion.h2>
+      </div>
 
       {/* Existing profiles */}
       <div className="flex flex-wrap justify-center gap-4">
@@ -112,13 +121,6 @@ export function ProfileSelect() {
         </motion.div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setScreen('start')}
-        className="text-white/40 hover:text-white/60 transition-colors"
-      >
-        ← Back
-      </button>
     </div>
   );
 }

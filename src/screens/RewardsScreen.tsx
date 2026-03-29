@@ -9,11 +9,17 @@ export function RewardsScreen() {
   if (!activeProfile) return null;
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-8 px-4 gap-6">
-      <h2 className="text-3xl font-bold text-white">🏆 Achievements</h2>
-
-      <div className="text-xl text-accent font-bold">
-        ⭐ {activeProfile.totalStars} Stars
+    <div className="flex flex-col items-center min-h-screen py-4 sm:py-8 px-4 gap-6">
+      <div className="flex items-center justify-between w-full max-w-2xl">
+        <button
+          type="button"
+          onClick={() => setScreen('world-map')}
+          className="px-4 py-2 rounded-full bg-bg-card text-white/60 hover:text-white text-sm"
+        >
+          ← Map
+        </button>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white">🏆 Achievements</h2>
+        <div className="text-sm text-accent font-bold">⭐ {activeProfile.totalStars}</div>
       </div>
 
       <motion.div
@@ -30,14 +36,6 @@ export function RewardsScreen() {
           />
         ))}
       </motion.div>
-
-      <button
-        type="button"
-        onClick={() => setScreen('world-map')}
-        className="px-8 py-3 rounded-full bg-primary text-white font-bold mt-4"
-      >
-        ← Back to Map
-      </button>
     </div>
   );
 }
