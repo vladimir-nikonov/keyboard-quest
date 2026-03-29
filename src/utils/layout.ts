@@ -14,18 +14,20 @@ export function detectInputLanguage(text: string): 'latin' | 'cyrillic' | null {
 export function isLayoutCorrect(input: string, targetLang: Language): boolean | null {
   const detected = detectInputLanguage(input);
   if (!detected) return null;
-  if (targetLang === 'en') return detected === 'latin';
-  return detected === 'cyrillic'; // ru and uk both need cyrillic
+  if (targetLang === 'en' || targetLang === 'pl') return detected === 'latin';
+  return detected === 'cyrillic'; // ru and uk need cyrillic
 }
 
 export const languageFlags: Record<Language, string> = {
   en: '🇺🇸',
-  ru: '🇷🇺',
   uk: '🇺🇦',
+  pl: '🇵🇱',
+  ru: '🇷🇺',
 };
 
 export const languageNames: Record<Language, string> = {
   en: 'English',
-  ru: 'Русский',
   uk: 'Українська',
+  pl: 'Polski',
+  ru: 'Русский',
 };

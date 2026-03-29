@@ -44,6 +44,25 @@ export const wordBank: Word[] = [
   { text: 'собака', language: 'ru', difficulty: 3 },
   { text: 'машина', language: 'ru', difficulty: 3 },
 
+  // Polish — easy
+  { text: 'mama', language: 'pl', difficulty: 1 },
+  { text: 'tata', language: 'pl', difficulty: 1 },
+  { text: 'kot', language: 'pl', difficulty: 1 },
+  { text: 'pies', language: 'pl', difficulty: 1 },
+  { text: 'dom', language: 'pl', difficulty: 1 },
+  { text: 'gra', language: 'pl', difficulty: 1 },
+  { text: 'ryba', language: 'pl', difficulty: 1 },
+  // Polish — medium
+  { text: 'kwiat', language: 'pl', difficulty: 2 },
+  { text: 'morze', language: 'pl', difficulty: 2 },
+  { text: 'drzewo', language: 'pl', difficulty: 2 },
+  { text: 'miasto', language: 'pl', difficulty: 2 },
+  { text: 'numer', language: 'pl', difficulty: 2 },
+  // Polish — hard
+  { text: 'komputer', language: 'pl', difficulty: 3 },
+  { text: 'samolot', language: 'pl', difficulty: 3 },
+  { text: 'przyjaciel', language: 'pl', difficulty: 3 },
+
   // Ukrainian — easy
   { text: 'мама', language: 'uk', difficulty: 1 },
   { text: 'тато', language: 'uk', difficulty: 1 },

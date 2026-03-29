@@ -2,15 +2,16 @@ import type { Language } from '@/types';
 
 const langMap: Record<Language, string> = {
   en: 'en-US',
-  ru: 'ru-RU',
   uk: 'uk-UA',
+  pl: 'pl-PL',
+  ru: 'ru-RU',
 };
 
-// Fallback chain: if the primary language voice is unavailable, try these
 const fallbackMap: Record<Language, string[]> = {
   en: ['en-GB', 'en'],
+  uk: ['ru-RU', 'ru'],
+  pl: ['pl'],
   ru: ['ru'],
-  uk: ['ru-RU', 'ru'], // Ukrainian → Russian as fallback (kids understand both)
 };
 
 function findVoice(lang: string): SpeechSynthesisVoice | null {

@@ -1,4 +1,4 @@
-export type Language = 'en' | 'ru' | 'uk';
+export type Language = 'en' | 'uk' | 'pl' | 'ru';
 
 export interface UserProfile {
   id: string;
@@ -22,8 +22,8 @@ export interface LevelProgress {
 
 export interface Level {
   id: number;
-  title: Record<Language, string>;
-  description: Record<Language, string>;
+  title: Record<string, string>;
+  description: Record<string, string>;
   type: LevelType;
   language: Language | 'mixed';
   requiredStars: number; // stars needed to unlock

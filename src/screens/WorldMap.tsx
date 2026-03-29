@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { levels } from '@/data/levels';
+import { getLevelsForLanguage, getStarsForLanguage } from '@/data/levels';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { StarRating } from '@/components/StarRating';
+import { languageFlags } from '@/utils/layout';
 
 export function WorldMap() {
   const { activeProfile, language, setLanguage, setScreen, setActiveLevelId } = useGame();
@@ -10,9 +11,14 @@ export function WorldMap() {
   if (!activeProfile) return null;
 
   const totalStars = activeProfile.totalStars;
+  const langStars = getStarsForLanguage(activeProfile.progress, language);
+  const visibleLevels = getLevelsForLanguage(language);
 
   const handleLevelClick = (levelId: number, requiredStars: number) => {
-    if (totalStars >= requiredStars) {
+    // For language-specific levels, use langStars; for mixed, use totalStars
+    const level = visibleLevels.find((l) => l.id === levelId);
+    const starsToCheck = level?.language === 'mixed' ? totalStars : langStars;
+    if (starsToCheck >= requiredStars) {
       setActiveLevelId(levelId);
       setScreen('level');
     }
@@ -27,52 +33,47 @@ export function WorldMap() {
             <span className="text-3xl sm:text-4xl">{activeProfile.avatar}</span>
             <div className="text-left">
               <div className="font-bold text-sm sm:text-lg">{activeProfile.name}</div>
-              <div className="text-white/50 text-xs sm:text-sm">⭐ {totalStars} stars</div>
+              <div className="text-white/50 text-xs sm:text-sm">⭐ {totalStars} total</div>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => setScreen('rewards')}
-              className="px-2 sm:px-3 py-1.5 rounded-full bg-accent/20 text-accent font-bold text-xs sm:text-sm"
-            >
+            <button type="button" onClick={() => setScreen('rewards')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-accent/20 text-accent font-bold text-xs sm:text-sm">
               🏆
             </button>
-            <button
-              type="button"
-              onClick={() => setScreen('parent-dashboard')}
-              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm"
-            >
+            <button type="button" onClick={() => setScreen('parent-dashboard')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm">
               👨‍👩‍👧
             </button>
-            <button
-              type="button"
-              onClick={() => setScreen('profile-select')}
-              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm"
-            >
+            <button type="button" onClick={() => setScreen('profile-select')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm">
               👤
             </button>
-            <button
-              type="button"
-              onClick={() => setScreen('start')}
-              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm"
-            >
+            <button type="button" onClick={() => setScreen('start')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm">
               🚪
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">World Map</h2>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">
+              {languageFlags[language]} World Map
+            </h2>
+            <div className="text-white/40 text-xs">⭐ {langStars} in this language</div>
+          </div>
           <LanguageSelector current={language} onChange={setLanguage} />
         </div>
       </div>
 
       {/* Levels */}
       <div className="flex flex-col items-center gap-4 w-full max-w-md">
-        {levels.map((level, idx) => {
-          const unlocked = totalStars >= level.requiredStars;
+        {visibleLevels.map((level, idx) => {
+          const starsToCheck = level.language === 'mixed' ? totalStars : langStars;
+          const unlocked = starsToCheck >= level.requiredStars;
           const progress = activeProfile.progress.find((p) => p.levelId === level.id);
           const stars = progress?.stars ?? 0;
+          const levelNum = idx + 1;
 
           return (
             <motion.button
@@ -96,14 +97,17 @@ export function WorldMap() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-white/80">
-                      {unlocked ? level.id : '🔒'}
+                      {unlocked ? levelNum : '🔒'}
                     </span>
                     <span className="font-bold text-white">
-                      {level.title[language]}
+                      {level.title[language] ?? level.title.en}
                     </span>
+                    {level.language === 'mixed' && (
+                      <span className="text-xs bg-primary/30 text-primary-light px-2 py-0.5 rounded-full">MIX</span>
+                    )}
                   </div>
                   <p className="text-sm text-white/50 mt-1">
-                    {level.description[language]}
+                    {level.description[language] ?? level.description.en}
                   </p>
                 </div>
                 {progress && <StarRating stars={stars} size="sm" />}
@@ -117,7 +121,6 @@ export function WorldMap() {
           );
         })}
       </div>
-
     </div>
   );
 }

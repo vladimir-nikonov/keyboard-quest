@@ -1,5 +1,7 @@
 import { useGame } from '@/context/GameContext';
-import { levels } from '@/data/levels';
+import { levels, getStarsForLanguage } from '@/data/levels';
+import { languageFlags } from '@/utils/layout';
+import type { Language } from '@/types';
 
 export function ParentDashboard() {
   const { activeProfile, language, setScreen } = useGame();
@@ -38,13 +40,23 @@ export function ParentDashboard() {
           </div>
         </div>
 
+        <h3 className="font-bold text-white mt-4">Stars by Language</h3>
+        <div className="flex gap-3 flex-wrap">
+          {(['en', 'uk', 'pl', 'ru'] as Language[]).map((lang) => (
+            <div key={lang} className="bg-bg-card px-3 py-2 rounded-xl text-center">
+              <div className="text-lg">{languageFlags[lang]}</div>
+              <div className="text-sm font-bold">{getStarsForLanguage(activeProfile.progress, lang)}⭐</div>
+            </div>
+          ))}
+        </div>
+
         <h3 className="font-bold text-white mt-4">Level Progress</h3>
         <div className="space-y-2">
           {levels.map((level) => {
             const progress = activeProfile.progress.find((p) => p.levelId === level.id);
             return (
               <div key={level.id} className="flex justify-between items-center p-2 rounded-lg bg-bg-card">
-                <span className="text-sm">{level.title[language]}</span>
+                <span className="text-sm">{level.title[language] ?? level.title.en}</span>
                 <span className="text-sm text-white/50">
                   {progress
                     ? `${progress.stars}⭐ · ${progress.bestAccuracy}% · ${progress.attempts} tries`

@@ -57,9 +57,10 @@ export function Keycap({
     >
       {showAll ? (
         <>
-          <span className="text-[7px] sm:text-[10px] leading-none text-blue-300">{keyData.en}</span>
-          <span className="text-[7px] sm:text-[10px] leading-none text-red-300">{keyData.ru}</span>
-          <span className="text-[7px] sm:text-[10px] leading-none text-yellow-300">{keyData.uk}</span>
+          <span className="text-[6px] sm:text-[9px] leading-none text-blue-300">{keyData.en}</span>
+          <span className="text-[6px] sm:text-[9px] leading-none text-yellow-300">{keyData.uk}</span>
+          <span className="text-[6px] sm:text-[9px] leading-none text-green-300">{keyData.pl}</span>
+          <span className="text-[6px] sm:text-[9px] leading-none text-red-300">{keyData.ru}</span>
         </>
       ) : (
         <span className="text-sm sm:text-lg uppercase">{keyData[language]}</span>

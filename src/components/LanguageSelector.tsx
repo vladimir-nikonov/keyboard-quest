@@ -8,8 +8,9 @@ interface LanguageSelectorProps {
 
 const languages: { code: Language; label: string; flag: string }[] = [
   { code: 'en', label: 'EN', flag: '🇺🇸' },
-  { code: 'ru', label: 'RU', flag: '🇷🇺' },
   { code: 'uk', label: 'UA', flag: '🇺🇦' },
+  { code: 'pl', label: 'PL', flag: '🇵🇱' },
+  { code: 'ru', label: 'RU', flag: '🇷🇺' },
 ];
 
 export function LanguageSelector({ current, onChange }: LanguageSelectorProps) {
@@ -22,7 +23,7 @@ export function LanguageSelector({ current, onChange }: LanguageSelectorProps) {
           onClick={() => onChange(code)}
           whileTap={{ scale: 0.9 }}
           className={`
-            flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold
+            flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold
             transition-colors
             ${current === code
               ? 'bg-primary text-white shadow-lg'

@@ -1,66 +1,65 @@
 export interface KeyLayout {
   en: string;
-  ru: string;
   uk: string;
+  pl: string;
+  ru: string;
 }
 
 export interface KeyboardRow {
   keys: KeyLayout[];
-  offset: number; // CSS left offset in rem for stagger
+  offset: number;
 }
 
 export const keyboardLayout: KeyboardRow[] = [
   {
     offset: 0,
     keys: [
-      { en: 'q', ru: 'й', uk: 'й' },
-      { en: 'w', ru: 'ц', uk: 'ц' },
-      { en: 'e', ru: 'у', uk: 'у' },
-      { en: 'r', ru: 'к', uk: 'к' },
-      { en: 't', ru: 'е', uk: 'е' },
-      { en: 'y', ru: 'н', uk: 'н' },
-      { en: 'u', ru: 'г', uk: 'г' },
-      { en: 'i', ru: 'ш', uk: 'ш' },
-      { en: 'o', ru: 'щ', uk: 'щ' },
-      { en: 'p', ru: 'з', uk: 'з' },
-      { en: '[', ru: 'х', uk: 'х' },
-      { en: ']', ru: 'ъ', uk: 'ї' },
+      { en: 'q', uk: 'й', pl: 'q', ru: 'й' },
+      { en: 'w', uk: 'ц', pl: 'w', ru: 'ц' },
+      { en: 'e', uk: 'у', pl: 'e', ru: 'у' },
+      { en: 'r', uk: 'к', pl: 'r', ru: 'к' },
+      { en: 't', uk: 'е', pl: 't', ru: 'е' },
+      { en: 'y', uk: 'н', pl: 'y', ru: 'н' },
+      { en: 'u', uk: 'г', pl: 'u', ru: 'г' },
+      { en: 'i', uk: 'ш', pl: 'i', ru: 'ш' },
+      { en: 'o', uk: 'щ', pl: 'o', ru: 'щ' },
+      { en: 'p', uk: 'з', pl: 'p', ru: 'з' },
+      { en: '[', uk: 'х', pl: '[', ru: 'х' },
+      { en: ']', uk: 'ї', pl: ']', ru: 'ъ' },
     ],
   },
   {
     offset: 0.5,
     keys: [
-      { en: 'a', ru: 'ф', uk: 'ф' },
-      { en: 's', ru: 'ы', uk: 'і' },
-      { en: 'd', ru: 'в', uk: 'в' },
-      { en: 'f', ru: 'а', uk: 'а' },
-      { en: 'g', ru: 'п', uk: 'п' },
-      { en: 'h', ru: 'р', uk: 'р' },
-      { en: 'j', ru: 'о', uk: 'о' },
-      { en: 'k', ru: 'л', uk: 'л' },
-      { en: 'l', ru: 'д', uk: 'д' },
-      { en: ';', ru: 'ж', uk: 'ж' },
-      { en: "'", ru: 'э', uk: 'є' },
+      { en: 'a', uk: 'ф', pl: 'a', ru: 'ф' },
+      { en: 's', uk: 'і', pl: 's', ru: 'ы' },
+      { en: 'd', uk: 'в', pl: 'd', ru: 'в' },
+      { en: 'f', uk: 'а', pl: 'f', ru: 'а' },
+      { en: 'g', uk: 'п', pl: 'g', ru: 'п' },
+      { en: 'h', uk: 'р', pl: 'h', ru: 'р' },
+      { en: 'j', uk: 'о', pl: 'j', ru: 'о' },
+      { en: 'k', uk: 'л', pl: 'k', ru: 'л' },
+      { en: 'l', uk: 'д', pl: 'l', ru: 'д' },
+      { en: ';', uk: 'ж', pl: ';', ru: 'ж' },
+      { en: "'", uk: 'є', pl: "'", ru: 'э' },
     ],
   },
   {
     offset: 1.25,
     keys: [
-      { en: 'z', ru: 'я', uk: 'я' },
-      { en: 'x', ru: 'ч', uk: 'ч' },
-      { en: 'c', ru: 'с', uk: 'с' },
-      { en: 'v', ru: 'м', uk: 'м' },
-      { en: 'b', ru: 'и', uk: 'и' },
-      { en: 'n', ru: 'т', uk: 'т' },
-      { en: 'm', ru: 'ь', uk: 'ь' },
-      { en: ',', ru: 'б', uk: 'б' },
-      { en: '.', ru: 'ю', uk: 'ю' },
+      { en: 'z', uk: 'я', pl: 'z', ru: 'я' },
+      { en: 'x', uk: 'ч', pl: 'x', ru: 'ч' },
+      { en: 'c', uk: 'с', pl: 'c', ru: 'с' },
+      { en: 'v', uk: 'м', pl: 'v', ru: 'м' },
+      { en: 'b', uk: 'и', pl: 'b', ru: 'и' },
+      { en: 'n', uk: 'т', pl: 'n', ru: 'т' },
+      { en: 'm', uk: 'ь', pl: 'm', ru: 'ь' },
+      { en: ',', uk: 'б', pl: ',', ru: 'б' },
+      { en: '.', uk: 'ю', pl: '.', ru: 'ю' },
     ],
   },
 ];
 
-// Finger assignment by English key position
-// 👆 = index, 🖕 = middle, 💍 = ring, 🤙 = pinky
 export type Finger = 'left-pinky' | 'left-ring' | 'left-middle' | 'left-index' | 'right-index' | 'right-middle' | 'right-ring' | 'right-pinky';
 
 export const fingerMap: Record<string, Finger> = {
@@ -100,7 +99,6 @@ export const fingerColors: Record<Finger, string> = {
   'right-pinky': 'bg-pink-500/70',
 };
 
-// Map physical key code (e.g. 'KeyA') to key position in layout
 const codeToEnKey: Record<string, string> = {
   KeyQ: 'q', KeyW: 'w', KeyE: 'e', KeyR: 'r', KeyT: 't',
   KeyY: 'y', KeyU: 'u', KeyI: 'i', KeyO: 'o', KeyP: 'p',
@@ -112,7 +110,6 @@ const codeToEnKey: Record<string, string> = {
   KeyN: 'n', KeyM: 'm', Comma: ',', Period: '.',
 };
 
-// Build a lookup: enKey -> { en, ru, uk }
 const enKeyToLayout: Record<string, KeyLayout> = {};
 for (const row of keyboardLayout) {
   for (const key of row.keys) {
@@ -120,8 +117,7 @@ for (const row of keyboardLayout) {
   }
 }
 
-/** Given a physical keyboard event code, return the letter for the given language */
-export function codeToLetter(code: string, lang: 'en' | 'ru' | 'uk'): string | null {
+export function codeToLetter(code: string, lang: 'en' | 'uk' | 'pl' | 'ru'): string | null {
   const enKey = codeToEnKey[code];
   if (!enKey) return null;
   const layout = enKeyToLayout[enKey];
@@ -129,13 +125,6 @@ export function codeToLetter(code: string, lang: 'en' | 'ru' | 'uk'): string | n
 }
 
 export const polishHints: Record<string, string> = {
-  'ш': 'sz',
-  'ч': 'cz',
-  'ж': 'ż',
-  'ц': 'c',
-  'я': 'ja',
-  'ю': 'ju',
-  'ї': 'ji',
-  'є': 'je',
-  'щ': 'szcz',
+  'ш': 'sz', 'ч': 'cz', 'ж': 'ż', 'ц': 'c',
+  'я': 'ja', 'ю': 'ju', 'ї': 'ji', 'є': 'je', 'щ': 'szcz',
 };
