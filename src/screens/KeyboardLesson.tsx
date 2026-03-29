@@ -28,8 +28,10 @@ export function KeyboardLesson({ level, language }: Props) {
   const [total, setTotal] = useState(0);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [saved, setSaved] = useState(false);
+  const [attemptsLeft, setAttemptsLeft] = useState(2);
 
   const goal = 10;
+  const maxAttempts = 2;
 
   // Pixel art state
   const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0);
@@ -71,16 +73,32 @@ export function KeyboardLesson({ level, language }: Props) {
         setFeedback('correct');
         playSuccess();
         setBuiltBlocks((prev) => Math.min(prev + blocksPerCorrect, totalBlocks));
+        setTimeout(() => {
+          setFeedback(null);
+          setTargetLetter(getRandomLetter(language));
+          setAttemptsLeft(maxAttempts);
+        }, 500);
       } else {
+        const remaining = attemptsLeft - 1;
+        setAttemptsLeft(remaining);
         setFeedback('wrong');
         playError();
+        if (remaining <= 0) {
+          // Out of attempts — show correct key, then move on
+          setTimeout(() => {
+            setFeedback(null);
+            setTargetLetter(getRandomLetter(language));
+            setAttemptsLeft(maxAttempts);
+          }, 1000);
+        } else {
+          // Still has attempts — let them try again
+          setTimeout(() => {
+            setFeedback(null);
+          }, 400);
+        }
       }
-      setTimeout(() => {
-        setFeedback(null);
-        setTargetLetter(getRandomLetter(language));
-      }, 500);
     },
-    [targetLetter, language, score, feedback],
+    [targetLetter, language, score, feedback, attemptsLeft],
   );
 
   // Listen to physical keyboard via e.code -> map to game language
@@ -161,6 +179,13 @@ export function KeyboardLesson({ level, language }: Props) {
         <div className="flex flex-col items-center gap-2">
           <div className="text-white/50 text-sm">
             ({score}/{goal})
+          </div>
+          <div className="flex gap-1">
+            {Array.from({ length: maxAttempts }).map((_, i) => (
+              <span key={i} className={`text-lg ${i < attemptsLeft ? 'text-error' : 'text-white/20'}`}>
+                ♥
+              </span>
+            ))}
           </div>
         </div>
       </div>
