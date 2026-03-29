@@ -1,19 +1,14 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Language, UserProfile, Screen } from '@/types';
-import { loadProfiles, saveProfiles, createProfile } from '@/utils/storage';
+import { loadProfiles, saveProfiles, createProfile, loadActiveProfileId, saveActiveProfileId } from '@/utils/storage';
 
 interface GameContextType {
-  // Navigation
   screen: Screen;
   setScreen: (screen: Screen) => void;
   activeLevelId: number | null;
   setActiveLevelId: (id: number | null) => void;
-
-  // Language
   language: Language;
   setLanguage: (lang: Language) => void;
-
-  // Profiles
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   selectProfile: (id: string) => void;
@@ -24,13 +19,56 @@ interface GameContextType {
 const GameContext = createContext<GameContextType | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [screen, setScreen] = useState<Screen>('start');
+  const [screen, setScreen] = useState<Screen>(() => {
+    // If we have a saved profile, skip start screen
+    const savedId = loadActiveProfileId();
+    const profiles = loadProfiles();
+    if (savedId && profiles.some((p) => p.id === savedId)) {
+      return 'world-map';
+    }
+    return 'start';
+  });
   const [activeLevelId, setActiveLevelId] = useState<number | null>(null);
   const [language, setLanguage] = useState<Language>('en');
   const [profiles, setProfiles] = useState<UserProfile[]>(() => loadProfiles());
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(() => {
+    const savedId = loadActiveProfileId();
+    const profiles = loadProfiles();
+    // Only restore if profile still exists
+    return savedId && profiles.some((p) => p.id === savedId) ? savedId : null;
+  });
 
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? null;
+
+  // Save profiles to localStorage on every change as backup
+  useEffect(() => {
+    saveProfiles(profiles);
+  }, [profiles]);
+
+  // Save active profile ID when it changes
+  useEffect(() => {
+    saveActiveProfileId(activeProfileId);
+  }, [activeProfileId]);
+
+  // Save on page close/hide
+  useEffect(() => {
+    function handleBeforeUnload() {
+      saveProfiles(profiles);
+      saveActiveProfileId(activeProfileId);
+    }
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') {
+        saveProfiles(profiles);
+        saveActiveProfileId(activeProfileId);
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [profiles, activeProfileId]);
 
   const selectProfile = useCallback((id: string) => {
     setActiveProfileId(id);
@@ -45,6 +83,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return next;
     });
     setActiveProfileId(profile.id);
+    saveActiveProfileId(profile.id);
     setScreen('world-map');
   }, []);
 
