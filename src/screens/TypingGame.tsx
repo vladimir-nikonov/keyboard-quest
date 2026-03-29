@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Language, Level, ResultComparison } from '@/types';
 import { useGame } from '@/context/GameContext';
 import { Keyboard } from '@/components/Keyboard';
@@ -9,6 +9,8 @@ import { wordBank } from '@/data/words';
 import { compareWords } from '@/utils/comparison';
 import { saveLevelProgress } from '@/utils/progress';
 import { speak } from '@/utils/tts';
+import { isLayoutCorrect, languageFlags, languageNames } from '@/utils/layout';
+import { playSuccess, playError, playLevelComplete } from '@/utils/sounds';
 
 interface Props {
   level: Level;
@@ -32,6 +34,7 @@ export function TypingGame({ level, language }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = words[currentIdx];
+  const layoutOk = isLayoutCorrect(input, language);
 
   // Auto-speak word when it appears
   useEffect(() => {
@@ -46,6 +49,7 @@ export function TypingGame({ level, language }: Props) {
         results.reduce((sum, r) => sum + r.accuracy, 0) / results.length,
       );
       updateProfile(saveLevelProgress(activeProfile, level.id, avgAccuracy));
+      playLevelComplete();
     }
   }, [done]);
 
@@ -55,6 +59,12 @@ export function TypingGame({ level, language }: Props) {
     const comparison = compareWords(currentWord.text, input.trim());
     setResult(comparison);
     setResults((prev) => [...prev, comparison]);
+
+    if (comparison.isCorrect) {
+      playSuccess();
+    } else {
+      playError();
+    }
 
     setTimeout(() => {
       setResult(null);
@@ -144,6 +154,7 @@ export function TypingGame({ level, language }: Props) {
           </motion.div>
 
           <div className="flex items-center gap-2">
+            <span className="text-2xl" title={languageNames[language]}>{languageFlags[language]}</span>
             <input
               ref={inputRef}
               type="text"
@@ -151,7 +162,7 @@ export function TypingGame({ level, language }: Props) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               autoFocus
-              className="w-48 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
+              className={`w-48 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 ${layoutOk === false ? 'focus:ring-error ring-2 ring-error' : 'focus:ring-primary'}`}
               placeholder="Type here..."
             />
             {input.length > 0 && (
@@ -164,6 +175,19 @@ export function TypingGame({ level, language }: Props) {
               </button>
             )}
           </div>
+
+          <AnimatePresence>
+            {layoutOk === false && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-error text-sm font-bold"
+              >
+                Switch keyboard to {languageNames[language]} {languageFlags[language]}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button
             type="button"

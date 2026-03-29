@@ -6,6 +6,7 @@ import { Keyboard } from '@/components/Keyboard';
 import { keyboardLayout, codeToLetter } from '@/data/keyboards';
 import { saveLevelProgress } from '@/utils/progress';
 import { speak } from '@/utils/tts';
+import { playSuccess, playError, playLevelComplete } from '@/utils/sounds';
 
 interface Props {
   level: Level;
@@ -43,8 +44,10 @@ export function KeyboardLesson({ level, language }: Props) {
       if (isCorrect) {
         setScore((s) => s + 1);
         setFeedback('correct');
+        playSuccess();
       } else {
         setFeedback('wrong');
+        playError();
       }
       setTimeout(() => {
         setFeedback(null);
@@ -85,6 +88,7 @@ export function KeyboardLesson({ level, language }: Props) {
     if (score >= goal && activeProfile && !saved) {
       setSaved(true);
       updateProfile(saveLevelProgress(activeProfile, level.id, accuracy));
+      playLevelComplete();
     }
   }, [score, goal, activeProfile, saved, accuracy, level.id, updateProfile]);
 
