@@ -52,9 +52,9 @@ export function KeyboardLesson({ level, language }: Props) {
     return () => clearInterval(timer);
   }, [score, builtBlocks]);
 
-  // Auto-speak the target letter when it changes
+  // Auto-speak the target letter when it changes (but not after level complete)
   useEffect(() => {
-    if (targetLetter && feedback === null) {
+    if (targetLetter && feedback === null && score < goal) {
       speak(targetLetter, language);
     }
   }, [targetLetter, feedback === null]);
