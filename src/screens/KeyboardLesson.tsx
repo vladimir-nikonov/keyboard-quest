@@ -22,7 +22,7 @@ function getRandomLetter(lang: Language): string {
 }
 
 export function KeyboardLesson({ level, language }: Props) {
-  const { setScreen, activeProfile, updateProfile } = useGame();
+  const { setScreen, activeProfile, updateProfile, artTheme } = useGame();
   const [targetLetter, setTargetLetter] = useState(() => getRandomLetter(language));
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(0);
@@ -34,7 +34,7 @@ export function KeyboardLesson({ level, language }: Props) {
   const maxAttempts = 2;
 
   // Pixel art state
-  const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0);
+  const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0, artTheme);
   const totalBlocks = getTotalBlocks(pixelImage);
   const blocksPerCorrect = Math.ceil(totalBlocks / goal);
   const [builtBlocks, setBuiltBlocks] = useState(0);

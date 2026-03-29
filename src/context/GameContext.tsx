@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Language, UserProfile, Screen } from '@/types';
+import type { ArtTheme } from '@/data/pixelArt';
 import { loadProfiles, saveProfiles, createProfile, loadActiveProfileId, saveActiveProfileId } from '@/utils/storage';
 
 interface GameContextType {
@@ -9,6 +10,8 @@ interface GameContextType {
   setActiveLevelId: (id: number | null) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  artTheme: ArtTheme;
+  setArtTheme: (theme: ArtTheme) => void;
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   selectProfile: (id: string) => void;
@@ -30,6 +33,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   });
   const [activeLevelId, setActiveLevelId] = useState<number | null>(null);
   const [language, setLanguage] = useState<Language>('en');
+  const [artTheme, setArtTheme] = useState<ArtTheme>(() => {
+    try {
+      return (localStorage.getItem('keyboard-quest-theme') as ArtTheme) || 'flowers';
+    } catch { return 'flowers'; }
+  });
   const [profiles, setProfiles] = useState<UserProfile[]>(() => loadProfiles());
   const [activeProfileId, setActiveProfileId] = useState<string | null>(() => {
     const savedId = loadActiveProfileId();
@@ -39,6 +47,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   });
 
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? null;
+
+  // Save art theme
+  useEffect(() => {
+    try { localStorage.setItem('keyboard-quest-theme', artTheme); } catch {}
+  }, [artTheme]);
 
   // Save profiles to localStorage on every change as backup
   useEffect(() => {
@@ -104,6 +117,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setActiveLevelId,
         language,
         setLanguage,
+        artTheme,
+        setArtTheme,
         profiles,
         activeProfile,
         selectProfile,

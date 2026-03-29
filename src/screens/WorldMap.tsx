@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { getLevelsForLanguage, getStarsForLanguage } from '@/data/levels';
+import { themeInfo, type ArtTheme } from '@/data/pixelArt';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { StarRating } from '@/components/StarRating';
 import { languageFlags } from '@/utils/layout';
 
+const themes: ArtTheme[] = ['flowers', 'knights', 'ninja'];
+
 export function WorldMap() {
-  const { activeProfile, language, setLanguage, setScreen, setActiveLevelId } = useGame();
+  const { activeProfile, language, setLanguage, setScreen, setActiveLevelId, artTheme, setArtTheme } = useGame();
 
   if (!activeProfile) return null;
 
@@ -55,6 +58,22 @@ export function WorldMap() {
             </button>
           </div>
         </div>
+        {/* Theme selector */}
+        <div className="flex items-center justify-between">
+          <div className="flex gap-1">
+            {themes.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setArtTheme(t)}
+                className={`px-2 py-1 rounded-full text-sm transition-colors ${artTheme === t ? 'bg-primary text-white' : 'bg-bg-card text-white/50'}`}
+              >
+                {themeInfo[t].icon} {themeInfo[t].label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white">

@@ -29,7 +29,7 @@ const IDLE_TIMEOUT = 10_000; // 10s before blocks start crumbling
 const CRUMBLE_INTERVAL = 3_000; // lose a block every 3s of inactivity
 
 export function TypingGame({ level, language }: Props) {
-  const { setScreen, activeProfile, updateProfile } = useGame();
+  const { setScreen, activeProfile, updateProfile, artTheme } = useGame();
   const [words] = useState(() => getWords(language, 5));
   const [currentIdx, setCurrentIdx] = useState(0);
   const [input, setInput] = useState('');
@@ -42,7 +42,7 @@ export function TypingGame({ level, language }: Props) {
   const layoutOk = isLayoutCorrect(input, language);
 
   // Pixel art state
-  const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0);
+  const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0, artTheme);
   const totalBlocks = getTotalBlocks(pixelImage);
   const blocksPerWord = Math.ceil(totalBlocks / words.length);
   const [builtBlocks, setBuiltBlocks] = useState(0);
