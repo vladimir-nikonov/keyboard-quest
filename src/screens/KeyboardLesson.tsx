@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Keyboard } from '@/components/Keyboard';
 import { keyboardLayout, codeToLetter } from '@/data/keyboards';
 import { saveLevelProgress } from '@/utils/progress';
+import { speak } from '@/utils/tts';
 
 interface Props {
   level: Level;
@@ -26,6 +27,13 @@ export function KeyboardLesson({ level, language }: Props) {
   const [saved, setSaved] = useState(false);
 
   const goal = 10;
+
+  // Auto-speak the target letter when it changes
+  useEffect(() => {
+    if (targetLetter && feedback === null) {
+      speak(targetLetter, language);
+    }
+  }, [targetLetter, feedback === null]);
 
   const checkKey = useCallback(
     (pressedLetter: string) => {
@@ -121,20 +129,30 @@ export function KeyboardLesson({ level, language }: Props) {
         Find the letter: ({score}/{goal})
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={targetLetter}
-          initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          exit={{ scale: 0, rotate: 20 }}
-          className={`
-            text-5xl sm:text-8xl font-bold uppercase
-            ${feedback === 'correct' ? 'text-success' : feedback === 'wrong' ? 'text-error' : 'text-accent'}
-          `}
+      <div className="flex items-center gap-3">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={targetLetter}
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 20 }}
+            className={`
+              text-5xl sm:text-8xl font-bold uppercase
+              ${feedback === 'correct' ? 'text-success' : feedback === 'wrong' ? 'text-error' : 'text-accent'}
+            `}
+          >
+            {targetLetter}
+          </motion.div>
+        </AnimatePresence>
+        <motion.button
+          type="button"
+          onClick={() => speak(targetLetter, language)}
+          whileTap={{ scale: 0.85 }}
+          className="text-2xl sm:text-3xl p-2 rounded-full hover:bg-white/10 transition-colors"
         >
-          {targetLetter}
-        </motion.div>
-      </AnimatePresence>
+          🔊
+        </motion.button>
+      </div>
 
       <Keyboard
         language={language}
