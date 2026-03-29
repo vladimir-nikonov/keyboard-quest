@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Language, Level } from '@/types';
 import { useGame } from '@/context/GameContext';
@@ -7,6 +7,8 @@ import { keyboardLayout, codeToLetter } from '@/data/keyboards';
 import { saveLevelProgress } from '@/utils/progress';
 import { speak } from '@/utils/tts';
 import { playSuccess, playError, playLevelComplete } from '@/utils/sounds';
+import { PixelBuilder } from '@/components/PixelBuilder';
+import { getImageForLevel, getTotalBlocks } from '@/data/pixelArt';
 
 interface Props {
   level: Level;
@@ -29,6 +31,27 @@ export function KeyboardLesson({ level, language }: Props) {
 
   const goal = 10;
 
+  // Pixel art state
+  const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0);
+  const totalBlocks = getTotalBlocks(pixelImage);
+  const blocksPerCorrect = Math.ceil(totalBlocks / goal);
+  const [builtBlocks, setBuiltBlocks] = useState(0);
+  const [crumbleCount, setCrumbleCount] = useState(0);
+  const lastActivityRef = useRef(Date.now());
+
+  // Crumble timer
+  useEffect(() => {
+    if (score >= goal) return;
+    const timer = setInterval(() => {
+      const idle = Date.now() - lastActivityRef.current;
+      if (idle > 8000) {
+        const blocks = Math.floor((idle - 8000) / 2500) + 1;
+        setCrumbleCount(Math.min(blocks, builtBlocks));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [score, builtBlocks]);
+
   // Auto-speak the target letter when it changes
   useEffect(() => {
     if (targetLetter && feedback === null) {
@@ -41,10 +64,13 @@ export function KeyboardLesson({ level, language }: Props) {
       if (score >= goal || feedback) return;
       const isCorrect = pressedLetter.toLowerCase() === targetLetter.toLowerCase();
       setTotal((t) => t + 1);
+      lastActivityRef.current = Date.now();
+      setCrumbleCount(0);
       if (isCorrect) {
         setScore((s) => s + 1);
         setFeedback('correct');
         playSuccess();
+        setBuiltBlocks((prev) => Math.min(prev + blocksPerCorrect, totalBlocks));
       } else {
         setFeedback('wrong');
         playError();
@@ -94,7 +120,7 @@ export function KeyboardLesson({ level, language }: Props) {
 
   if (score >= goal) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -102,6 +128,7 @@ export function KeyboardLesson({ level, language }: Props) {
         >
           🎉
         </motion.div>
+        <PixelBuilder image={pixelImage} builtCount={builtBlocks} crumbleCount={0} />
         <h2 className="text-3xl font-bold text-success">Level Complete!</h2>
         <p className="text-white/60">Accuracy: {accuracy}%</p>
         <button
@@ -129,8 +156,13 @@ export function KeyboardLesson({ level, language }: Props) {
         {level.title[language]}
       </h2>
 
-      <div className="text-white/50">
-        Find the letter: ({score}/{goal})
+      <div className="flex items-center gap-4">
+        <PixelBuilder image={pixelImage} builtCount={builtBlocks} crumbleCount={crumbleCount} />
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-white/50 text-sm">
+            ({score}/{goal})
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

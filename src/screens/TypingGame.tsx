@@ -5,12 +5,14 @@ import { useGame } from '@/context/GameContext';
 import { Keyboard } from '@/components/Keyboard';
 import { WordComparison } from '@/components/WordComparison';
 import { ProgressBar } from '@/components/ProgressBar';
+import { PixelBuilder } from '@/components/PixelBuilder';
 import { wordBank } from '@/data/words';
 import { compareWords } from '@/utils/comparison';
 import { saveLevelProgress } from '@/utils/progress';
 import { speak } from '@/utils/tts';
 import { isLayoutCorrect, languageFlags, languageNames } from '@/utils/layout';
 import { playSuccess, playError, playLevelComplete } from '@/utils/sounds';
+import { getImageForLevel, getTotalBlocks } from '@/data/pixelArt';
 
 interface Props {
   level: Level;
@@ -22,6 +24,9 @@ function getWords(lang: Language, count: number) {
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
+
+const IDLE_TIMEOUT = 10_000; // 10s before blocks start crumbling
+const CRUMBLE_INTERVAL = 3_000; // lose a block every 3s of inactivity
 
 export function TypingGame({ level, language }: Props) {
   const { setScreen, activeProfile, updateProfile } = useGame();
@@ -35,6 +40,34 @@ export function TypingGame({ level, language }: Props) {
 
   const currentWord = words[currentIdx];
   const layoutOk = isLayoutCorrect(input, language);
+
+  // Pixel art state
+  const pixelImage = getImageForLevel(level.id, activeProfile?.totalStars ?? 0);
+  const totalBlocks = getTotalBlocks(pixelImage);
+  const blocksPerWord = Math.ceil(totalBlocks / words.length);
+  const [builtBlocks, setBuiltBlocks] = useState(0);
+  const [crumbleCount, setCrumbleCount] = useState(0);
+  const lastActivityRef = useRef(Date.now());
+
+  // Reset activity timer on any input
+  useEffect(() => {
+    lastActivityRef.current = Date.now();
+    setCrumbleCount(0);
+  }, [input, currentIdx]);
+
+  // Crumble timer — blocks fall if idle
+  useEffect(() => {
+    if (done || result) return;
+    const timer = setInterval(() => {
+      const idle = Date.now() - lastActivityRef.current;
+      if (idle > IDLE_TIMEOUT) {
+        const extraTime = idle - IDLE_TIMEOUT;
+        const blocks = Math.floor(extraTime / CRUMBLE_INTERVAL) + 1;
+        setCrumbleCount(Math.min(blocks, builtBlocks));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [done, result, builtBlocks]);
 
   // Auto-speak word when it appears
   useEffect(() => {
@@ -62,6 +95,8 @@ export function TypingGame({ level, language }: Props) {
 
     if (comparison.isCorrect) {
       playSuccess();
+      setBuiltBlocks((prev) => Math.min(prev + blocksPerWord, totalBlocks));
+      setCrumbleCount(0);
     } else {
       playError();
     }
@@ -69,6 +104,7 @@ export function TypingGame({ level, language }: Props) {
     setTimeout(() => {
       setResult(null);
       setInput('');
+      lastActivityRef.current = Date.now();
       if (currentIdx + 1 >= words.length) {
         setDone(true);
       } else {
@@ -76,7 +112,7 @@ export function TypingGame({ level, language }: Props) {
       }
       inputRef.current?.focus();
     }, 1500);
-  }, [currentWord, input, currentIdx, words.length]);
+  }, [currentWord, input, currentIdx, words.length, blocksPerWord, totalBlocks]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -94,10 +130,11 @@ export function TypingGame({ level, language }: Props) {
       results.reduce((sum, r) => sum + r.accuracy, 0) / results.length,
     );
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-6xl">
           🎉
         </motion.div>
+        <PixelBuilder image={pixelImage} builtCount={builtBlocks} crumbleCount={0} />
         <h2 className="text-3xl font-bold text-success">Level Complete!</h2>
         <p className="text-white/60">
           Average accuracy: {avgAccuracy}%
@@ -117,7 +154,7 @@ export function TypingGame({ level, language }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-3 sm:gap-6 px-2 sm:px-4 py-4">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-2 sm:gap-4 px-2 sm:px-4 py-4">
       <button
         type="button"
         onClick={() => setScreen('world-map')}
@@ -126,79 +163,90 @@ export function TypingGame({ level, language }: Props) {
         ← Back
       </button>
 
-      <h2 className="text-2xl font-bold text-white">{level.title[language]}</h2>
+      <div className="flex items-start gap-4 w-full max-w-2xl justify-center">
+        <div className="flex flex-col items-center gap-2 sm:gap-4 flex-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">{level.title[language]}</h2>
+          <ProgressBar current={currentIdx} total={words.length} label="Words" />
 
-      <ProgressBar current={currentIdx} total={words.length} label="Words" />
+          {result ? (
+            <WordComparison result={result} />
+          ) : (
+            <>
+              <motion.div
+                key={currentWord?.text}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2"
+              >
+                <span className="text-2xl sm:text-4xl font-bold text-accent">{currentWord?.text}</span>
+                <motion.button
+                  type="button"
+                  onClick={() => currentWord && speak(currentWord.text, language)}
+                  whileTap={{ scale: 0.85 }}
+                  className="text-2xl p-1 rounded-full hover:bg-white/10"
+                >
+                  🔊
+                </motion.button>
+              </motion.div>
 
-      {result ? (
-        <WordComparison result={result} />
-      ) : (
-        <>
-          <motion.div
-            key={currentWord?.text}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3"
-          >
-            <span className="text-3xl sm:text-5xl font-bold text-accent">{currentWord?.text}</span>
-            <motion.button
-              type="button"
-              onClick={() => currentWord && speak(currentWord.text, language)}
-              whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: 1.1 }}
-              className="text-3xl p-2 rounded-full hover:bg-white/10 transition-colors"
-              title="Listen"
-            >
-              🔊
-            </motion.button>
-          </motion.div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl" title={languageNames[language]}>{languageFlags[language]}</span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                  className={`w-44 sm:w-64 px-3 sm:px-5 py-2 sm:py-3 rounded-xl bg-bg-card text-white text-center text-lg sm:text-2xl font-mono outline-none focus:ring-2 ${layoutOk === false ? 'focus:ring-error ring-2 ring-error' : 'focus:ring-primary'}`}
+                  placeholder="Type here..."
+                />
+                {input.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setInput((prev) => prev.slice(0, -1))}
+                    className="px-2 py-2 rounded-xl bg-bg-card text-white/60 hover:text-white"
+                  >
+                    ⌫
+                  </button>
+                )}
+              </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-2xl" title={languageNames[language]}>{languageFlags[language]}</span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoFocus
-              className={`w-48 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 ${layoutOk === false ? 'focus:ring-error ring-2 ring-error' : 'focus:ring-primary'}`}
-              placeholder="Type here..."
-            />
-            {input.length > 0 && (
+              <AnimatePresence>
+                {layoutOk === false && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-error text-xs sm:text-sm font-bold"
+                  >
+                    Switch to {languageNames[language]} {languageFlags[language]}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <button
                 type="button"
-                onClick={() => setInput((prev) => prev.slice(0, -1))}
-                className="px-3 py-3 rounded-xl bg-bg-card text-white/60 text-lg hover:text-white"
+                onClick={handleSubmit}
+                disabled={!input.trim()}
+                className="px-6 py-2 rounded-full bg-primary text-white font-bold disabled:opacity-40 text-sm sm:text-base"
               >
-                ⌫
+                Check ✓
               </button>
-            )}
-          </div>
+            </>
+          )}
+        </div>
 
-          <AnimatePresence>
-            {layoutOk === false && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-error text-sm font-bold"
-              >
-                Switch keyboard to {languageNames[language]} {languageFlags[language]}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Pixel art building on the side */}
+        <div className="hidden sm:block">
+          <PixelBuilder image={pixelImage} builtCount={builtBlocks} crumbleCount={crumbleCount} />
+        </div>
+      </div>
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!input.trim()}
-            className="px-8 py-3 rounded-full bg-primary text-white font-bold disabled:opacity-40"
-          >
-            Check ✓
-          </button>
-        </>
-      )}
+      {/* Pixel art on mobile — show above keyboard */}
+      <div className="sm:hidden">
+        <PixelBuilder image={pixelImage} builtCount={builtBlocks} crumbleCount={crumbleCount} />
+      </div>
 
       <Keyboard
         language={language}
