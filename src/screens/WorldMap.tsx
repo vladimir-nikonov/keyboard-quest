@@ -21,19 +21,51 @@ export function WorldMap() {
   return (
     <div className="flex flex-col items-center min-h-screen py-4 sm:py-8 px-3 sm:px-4 gap-4 sm:gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between w-full max-w-2xl">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{activeProfile.avatar}</span>
-          <div className="text-left">
-            <div className="font-bold text-lg">{activeProfile.name}</div>
-            <div className="text-white/50 text-sm">⭐ {totalStars} stars</div>
+      <div className="flex flex-col gap-3 w-full max-w-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl sm:text-4xl">{activeProfile.avatar}</span>
+            <div className="text-left">
+              <div className="font-bold text-sm sm:text-lg">{activeProfile.name}</div>
+              <div className="text-white/50 text-xs sm:text-sm">⭐ {totalStars} stars</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setScreen('rewards')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-accent/20 text-accent font-bold text-xs sm:text-sm"
+            >
+              🏆
+            </button>
+            <button
+              type="button"
+              onClick={() => setScreen('parent-dashboard')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm"
+            >
+              👨‍👩‍👧
+            </button>
+            <button
+              type="button"
+              onClick={() => setScreen('profile-select')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm"
+            >
+              👤
+            </button>
+            <button
+              type="button"
+              onClick={() => setScreen('start')}
+              className="px-2 sm:px-3 py-1.5 rounded-full bg-bg-card text-white/50 text-xs sm:text-sm"
+            >
+              🚪
+            </button>
           </div>
         </div>
-        <LanguageSelector current={language} onChange={setLanguage} />
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">World Map</h2>
+          <LanguageSelector current={language} onChange={setLanguage} />
+        </div>
       </div>
-
-      {/* Title */}
-      <h2 className="text-3xl font-bold text-white">World Map</h2>
 
       {/* Levels */}
       <div className="flex flex-col items-center gap-4 w-full max-w-md">
@@ -86,37 +118,6 @@ export function WorldMap() {
         })}
       </div>
 
-      {/* Footer nav */}
-      <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-4 sm:mt-8">
-        <button
-          type="button"
-          onClick={() => setScreen('rewards')}
-          className="px-6 py-2 rounded-full bg-accent/20 text-accent font-bold"
-        >
-          🏆 Rewards
-        </button>
-        <button
-          type="button"
-          onClick={() => setScreen('parent-dashboard')}
-          className="px-6 py-2 rounded-full bg-bg-card text-white/50"
-        >
-          👨‍👩‍👧 Parents
-        </button>
-        <button
-          type="button"
-          onClick={() => setScreen('profile-select')}
-          className="px-6 py-2 rounded-full bg-bg-card text-white/50"
-        >
-          👤 Switch
-        </button>
-        <button
-          type="button"
-          onClick={() => setScreen('start')}
-          className="px-6 py-2 rounded-full bg-bg-card text-white/50"
-        >
-          🚪 Exit
-        </button>
-      </div>
     </div>
   );
 }
