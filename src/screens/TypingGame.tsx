@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Language, Level, ResultComparison } from '@/types';
 import { useGame } from '@/context/GameContext';
@@ -7,6 +7,8 @@ import { WordComparison } from '@/components/WordComparison';
 import { ProgressBar } from '@/components/ProgressBar';
 import { wordBank } from '@/data/words';
 import { compareWords } from '@/utils/comparison';
+import { saveLevelProgress } from '@/utils/progress';
+import { speak } from '@/utils/tts';
 
 interface Props {
   level: Level;
@@ -20,7 +22,7 @@ function getWords(lang: Language, count: number) {
 }
 
 export function TypingGame({ level, language }: Props) {
-  const { setScreen } = useGame();
+  const { setScreen, activeProfile, updateProfile } = useGame();
   const [words] = useState(() => getWords(language, 5));
   const [currentIdx, setCurrentIdx] = useState(0);
   const [input, setInput] = useState('');
@@ -30,6 +32,15 @@ export function TypingGame({ level, language }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = words[currentIdx];
+
+  useEffect(() => {
+    if (done && activeProfile && results.length > 0) {
+      const avgAccuracy = Math.round(
+        results.reduce((sum, r) => sum + r.accuracy, 0) / results.length,
+      );
+      updateProfile(saveLevelProgress(activeProfile, level.id, avgAccuracy));
+    }
+  }, [done]);
 
   const handleSubmit = useCallback(() => {
     if (!currentWord || !input.trim()) return;
@@ -84,7 +95,7 @@ export function TypingGame({ level, language }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-6 px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-3 sm:gap-6 px-2 sm:px-4 py-4">
       <button
         type="button"
         onClick={() => setScreen('world-map')}
@@ -105,9 +116,19 @@ export function TypingGame({ level, language }: Props) {
             key={currentWord?.text}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl font-bold text-accent"
+            className="flex items-center gap-3"
           >
-            {currentWord?.text}
+            <span className="text-3xl sm:text-5xl font-bold text-accent">{currentWord?.text}</span>
+            <motion.button
+              type="button"
+              onClick={() => currentWord && speak(currentWord.text, language)}
+              whileTap={{ scale: 0.85 }}
+              whileHover={{ scale: 1.1 }}
+              className="text-3xl p-2 rounded-full hover:bg-white/10 transition-colors"
+              title="Listen"
+            >
+              🔊
+            </motion.button>
           </motion.div>
 
           <input
@@ -117,7 +138,7 @@ export function TypingGame({ level, language }: Props) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="w-72 px-6 py-4 rounded-xl bg-bg-card text-white text-center text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
+            className="w-60 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
             placeholder="Type here..."
           />
 
@@ -132,7 +153,11 @@ export function TypingGame({ level, language }: Props) {
         </>
       )}
 
-      <Keyboard language={language} />
+      <Keyboard
+        language={language}
+        showFingerHint
+        highlightedKey={currentWord ? currentWord.text[input.length] ?? null : null}
+      />
     </div>
   );
 }

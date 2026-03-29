@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Language, Level, ResultComparison } from '@/types';
 import { useGame } from '@/context/GameContext';
@@ -8,6 +8,7 @@ import { WordComparison } from '@/components/WordComparison';
 import { ProgressBar } from '@/components/ProgressBar';
 import { wordBank } from '@/data/words';
 import { compareWords } from '@/utils/comparison';
+import { saveLevelProgress } from '@/utils/progress';
 
 interface Props {
   level: Level;
@@ -21,7 +22,7 @@ function getWords(lang: Language, count: number) {
 }
 
 export function AudioTypingGame({ level, language }: Props) {
-  const { setScreen } = useGame();
+  const { setScreen, activeProfile, updateProfile } = useGame();
   const [words] = useState(() => getWords(language, 5));
   const [currentIdx, setCurrentIdx] = useState(0);
   const [input, setInput] = useState('');
@@ -31,6 +32,15 @@ export function AudioTypingGame({ level, language }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = words[currentIdx];
+
+  useEffect(() => {
+    if (done && activeProfile && results.length > 0) {
+      const avgAccuracy = Math.round(
+        results.reduce((sum, r) => sum + r.accuracy, 0) / results.length,
+      );
+      updateProfile(saveLevelProgress(activeProfile, level.id, avgAccuracy));
+    }
+  }, [done]);
 
   const handleSubmit = useCallback(() => {
     if (!currentWord || !input.trim()) return;
@@ -78,7 +88,7 @@ export function AudioTypingGame({ level, language }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-6 px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-3 sm:gap-6 px-2 sm:px-4 py-4">
       <button
         type="button"
         onClick={() => setScreen('world-map')}
@@ -108,7 +118,7 @@ export function AudioTypingGame({ level, language }: Props) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="w-72 px-6 py-4 rounded-xl bg-bg-card text-white text-center text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
+            className="w-60 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
             placeholder="Type here..."
           />
 
@@ -123,7 +133,11 @@ export function AudioTypingGame({ level, language }: Props) {
         </>
       )}
 
-      <Keyboard language={language} />
+      <Keyboard
+        language={language}
+        showFingerHint
+        highlightedKey={currentWord ? currentWord.text[input.length] ?? null : null}
+      />
     </div>
   );
 }

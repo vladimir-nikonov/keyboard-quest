@@ -19,7 +19,7 @@ export function WorldMap() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-8 px-4 gap-6">
+    <div className="flex flex-col items-center min-h-screen py-4 sm:py-8 px-3 sm:px-4 gap-4 sm:gap-6">
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-2xl">
         <div className="flex items-center gap-3">
@@ -87,7 +87,7 @@ export function WorldMap() {
       </div>
 
       {/* Footer nav */}
-      <div className="flex gap-4 mt-8">
+      <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-4 sm:mt-8">
         <button
           type="button"
           onClick={() => setScreen('rewards')}
@@ -107,7 +107,14 @@ export function WorldMap() {
           onClick={() => setScreen('profile-select')}
           className="px-6 py-2 rounded-full bg-bg-card text-white/50"
         >
-          ← Switch
+          👤 Switch
+        </button>
+        <button
+          type="button"
+          onClick={() => setScreen('start')}
+          className="px-6 py-2 rounded-full bg-bg-card text-white/50"
+        >
+          🚪 Exit
         </button>
       </div>
     </div>

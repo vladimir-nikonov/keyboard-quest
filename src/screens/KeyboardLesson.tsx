@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Language, Level } from '@/types';
 import { useGame } from '@/context/GameContext';
 import { Keyboard } from '@/components/Keyboard';
-import { useKeyPress } from '@/hooks/useKeyPress';
-import { keyboardLayout } from '@/data/keyboards';
+import { keyboardLayout, codeToLetter } from '@/data/keyboards';
+import { saveLevelProgress } from '@/utils/progress';
 
 interface Props {
   level: Level;
@@ -18,18 +18,19 @@ function getRandomLetter(lang: Language): string {
 }
 
 export function KeyboardLesson({ level, language }: Props) {
-  const { setScreen } = useGame();
+  const { setScreen, activeProfile, updateProfile } = useGame();
   const [targetLetter, setTargetLetter] = useState(() => getRandomLetter(language));
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(0);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const goal = 10;
 
-  const handleKey = useCallback(
-    (key: string) => {
-      if (score >= goal) return;
-      const isCorrect = key.toLowerCase() === targetLetter.toLowerCase();
+  const checkKey = useCallback(
+    (pressedLetter: string) => {
+      if (score >= goal || feedback) return;
+      const isCorrect = pressedLetter.toLowerCase() === targetLetter.toLowerCase();
       setTotal((t) => t + 1);
       if (isCorrect) {
         setScore((s) => s + 1);
@@ -42,10 +43,42 @@ export function KeyboardLesson({ level, language }: Props) {
         setTargetLetter(getRandomLetter(language));
       }, 500);
     },
-    [targetLetter, language, score],
+    [targetLetter, language, score, feedback],
   );
 
-  useKeyPress(handleKey);
+  // Listen to physical keyboard via e.code -> map to game language
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if (e.repeat) return;
+      // Try mapping by physical key position
+      const mapped = codeToLetter(e.code, language);
+      if (mapped) {
+        checkKey(mapped);
+      } else if (e.key.length === 1) {
+        // Fallback: use the raw key (works when system layout matches game language)
+        checkKey(e.key);
+      }
+    }
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [checkKey, language]);
+
+  // Handle on-screen keyboard clicks
+  const handleClick = useCallback(
+    (key: string) => {
+      checkKey(key);
+    },
+    [checkKey],
+  );
+
+  const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
+
+  useEffect(() => {
+    if (score >= goal && activeProfile && !saved) {
+      setSaved(true);
+      updateProfile(saveLevelProgress(activeProfile, level.id, accuracy));
+    }
+  }, [score, goal, activeProfile, saved, accuracy, level.id, updateProfile]);
 
   if (score >= goal) {
     return (
@@ -58,7 +91,7 @@ export function KeyboardLesson({ level, language }: Props) {
           🎉
         </motion.div>
         <h2 className="text-3xl font-bold text-success">Level Complete!</h2>
-        <p className="text-white/60">Accuracy: {Math.round((score / total) * 100)}%</p>
+        <p className="text-white/60">Accuracy: {accuracy}%</p>
         <button
           type="button"
           onClick={() => setScreen('world-map')}
@@ -71,7 +104,7 @@ export function KeyboardLesson({ level, language }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-6 px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-3 sm:gap-6 px-2 sm:px-4 py-4">
       <button
         type="button"
         onClick={() => setScreen('world-map')}
@@ -95,7 +128,7 @@ export function KeyboardLesson({ level, language }: Props) {
           animate={{ scale: 1, rotate: 0 }}
           exit={{ scale: 0, rotate: 20 }}
           className={`
-            text-8xl font-bold uppercase
+            text-5xl sm:text-8xl font-bold uppercase
             ${feedback === 'correct' ? 'text-success' : feedback === 'wrong' ? 'text-error' : 'text-accent'}
           `}
         >
@@ -105,8 +138,9 @@ export function KeyboardLesson({ level, language }: Props) {
 
       <Keyboard
         language={language}
-        highlightedKey={feedback === 'wrong' ? targetLetter : null}
-        onKeyClick={handleKey}
+        highlightedKey={targetLetter}
+        showFingerHint
+        onKeyClick={handleClick}
       />
     </div>
   );

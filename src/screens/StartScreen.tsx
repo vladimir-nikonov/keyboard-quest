@@ -12,7 +12,7 @@ export function StartScreen() {
         transition={{ type: 'spring', bounce: 0.4 }}
         className="text-center"
       >
-        <h1 className="text-6xl sm:text-8xl font-extrabold bg-gradient-to-r from-primary-light via-accent to-accent-light bg-clip-text text-transparent">
+        <h1 className="text-4xl sm:text-6xl md:text-8xl font-extrabold bg-gradient-to-r from-primary-light via-accent to-accent-light bg-clip-text text-transparent">
           Keyboard Quest
         </h1>
         <p className="text-xl text-white/60 mt-4">Learn to type — in 3 languages!</p>
