@@ -9,6 +9,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { wordBank } from '@/data/words';
 import { compareWords } from '@/utils/comparison';
 import { saveLevelProgress } from '@/utils/progress';
+import { speak } from '@/utils/tts';
 
 interface Props {
   level: Level;
@@ -32,6 +33,13 @@ export function AudioTypingGame({ level, language }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = words[currentIdx];
+
+  // Auto-speak word when it appears
+  useEffect(() => {
+    if (currentWord && !result && !done) {
+      speak(currentWord.text, language);
+    }
+  }, [currentIdx, done]);
 
   useEffect(() => {
     if (done && activeProfile && results.length > 0) {
@@ -64,6 +72,11 @@ export function AudioTypingGame({ level, language }: Props) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSubmit();
   };
+
+  const handleScreenKey = useCallback((key: string) => {
+    if (result || done) return;
+    setInput((prev) => prev + key);
+  }, [result, done]);
 
   if (done) {
     const avgAccuracy = Math.round(
@@ -111,16 +124,27 @@ export function AudioTypingGame({ level, language }: Props) {
             <AudioButton text={currentWord.text} language={language} />
           )}
 
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="w-60 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Type here..."
-          />
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              className="w-48 sm:w-72 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-bg-card text-white text-center text-xl sm:text-2xl font-mono outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Type here..."
+            />
+            {input.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setInput((prev) => prev.slice(0, -1))}
+                className="px-3 py-3 rounded-xl bg-bg-card text-white/60 text-lg hover:text-white"
+              >
+                ⌫
+              </button>
+            )}
+          </div>
 
           <button
             type="button"
@@ -137,6 +161,7 @@ export function AudioTypingGame({ level, language }: Props) {
         language={language}
         showFingerHint
         highlightedKey={currentWord ? currentWord.text[input.length] ?? null : null}
+        onKeyClick={handleScreenKey}
       />
     </div>
   );
